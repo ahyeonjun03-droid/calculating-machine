@@ -1,48 +1,61 @@
 import ipywidgets as widgets
-from IPython.display import display, HTML, Math
+from IPython.display import display, Math, HTML
 
-# 수식을 깔끔하게 출력하기 위한 함수
-def print_math(latex_str):
-    display(Math(latex_str))
+# 결과 출력을 위한 전용 영역 생성
+out = widgets.Output()
 
-print("🎓 물리학1 풀이 과정 생성기 (수정판)")
-print("-" * 50)
-
-# 선택 메뉴
-mode = widgets.Dropdown(
-    options=['충격량-운동량', '역학적 에너지'], 
-    value='충격량-운동량',
-    description='분야 선택:'
-)
-
-# 입력 위젯들
-m_w = widgets.FloatText(value=2.0, description='질량 (m, kg):')
-v0_w = widgets.FloatText(value=0, description='초기속력 (v0, m/s):')
-v_w = widgets.FloatText(value=10.0, description='나중속력 (v, m/s):')
-h_w = widgets.FloatText(value=5.0, description='높이 (h, m):')
-
-btn = widgets.Button(description="풀이 생성하기", button_style='success')
-output = widgets.Output()
-
-def generate_solution(b):
-    with output:
-        output.clear_output()
-        g = 9.8 # 중력가속도 상수
+def show_solution(b):
+    with out:
+        out.clear_output()
         
-        if mode.value == '충격량-운동량':
-            impulse = m_w.value * v_w.value - m_w.value * v0_w.value
-            print_math(r'\text{1. 사용 공식: } I = \Delta p = m v - m v_0')
-            print_math(rf'\text{{2. 수치 대입: }} I = ({m_w.value} \times {v_w.value}) - ({m_w.value} \times {v0_w.value})')
-            print_math(rf'\text{{3. 결과: }} I = {impulse:.2f} \, \text{{N}}\cdot\text{{s}}')
-            
-        elif mode.value == '역학적 에너지':
-            ep = m_w.value * g * h_w.value
-            ek = 0.5 * m_w.value * (v_w.value ** 2)
-            etot = ep + ek
-            print_math(r'\text{1. 사용 공식: } E_{total} = mgh + \frac{1}{2}mv^2')
-            print_math(rf'\text{{2. 위치 에너지(E_p): }} {m_w.value} \times 9.8 \times {h_w.value} = {ep:.2f} \, \text{{J}}')
-            print_math(rf'\text{{3. 운동 에너지(E_k): }} \frac{{1}}{{2}} \times {m_w.value} \times {v_w.value}^2 = {ek:.2f} \, \text{{J}}')
-            print_math(rf'\text{{4. 역학적 에너지 합계: }} {etot:.2f} \, \text{{J}}')
+        # 1. 입력값 가져오기
+        m = float(m_in.value)
+        v0 = float(v0_in.value)
+        v = float(v_in.value)
+        h = float(h_in.value)
+        g = 9.8  # 중력가속도
+        
+        print(f"📝 선택한 분야: {mode.value}")
+        print("-" * 40)
 
-btn.on_click(generate_solution)
+        if mode.value == '충격량 구하기':
+            # 계산: I = mv - mv0
+            impulse = m * v - m * v0
+            
+            display(Math(r'\mathbf{[단계 1: 공식 설정]}'))
+            display(Math(r'I = \Delta p = m \cdot v - m \cdot v_0'))
+            
+            display(Math(r'\mathbf{[단계 2: 수치 대입]}'))
+            display(Math(rf'I = ({m} \times {v}) - ({m} \times {v0})'))
+            
+            display(Math(rf'\mathbf{{[단계 3: 최종 결과]}} \quad I = {impulse:.2f} \, \text{{N}}\cdot\text{{s}}'))
+
+        elif mode.value == '역학적 에너지 구하기':
+            # 계산
+            ep = m * g * h
+            ek = 0.5 * m * (v**2)
+            etot = ep + ek
+            
+            display(Math(r'\mathbf{[단계 1: 각 에너지 공식]}'))
+            display(Math(r'E_p = mgh, \quad E_k = \frac{1}{2}mv^2'))
+            
+            display(Math(r'\mathbf{[단계 2: 계산 과정]}'))
+            display(Math(rf'E_p = {m} \times 9.8 \times {h} = {ep:.2f} \, \text{{J}}'))
+            display(Math(rf'E_k = \frac{{1}}{{2}} \times {m} \times {v}^2 = {ek:.2f} \, \text{{J}}'))
+            
+            display(Math(r'\mathbf{[단계 3: 역학적 에너지 합계]}'))
+            display(Math(rf'E_{{total}} = {ep:.2f} + {ek:.2f} = {etot:.2f} \, \text{{J}}'))
+
+# --- UI 구성 ---
+mode = widgets.Dropdown(options=['충격량 구하기', '역학적 에너지 구하기'], description='모드:')
+m_in = widgets.FloatText(value=2.0, description='질량(kg):')
+v0_in = widgets.FloatText(value=0.0, description='초기속력(v0):')
+v_in = widgets.FloatText(value=10.0, description='나중속력(v):')
+h_in = widgets.FloatText(value=5.0, description='높이(h):')
+calc_btn = widgets.Button(description="풀이 과정 보기", button_style='info')
+
+calc_btn.on_click(show_solution)
+
+# 화면 표시
+display(widgets.VBox([mode, m_in, v0_in, v_in, h_in, calc_btn]), out)
 display(widgets.VBox([mode, m_w, v0_w, v_w, h_w, btn]), output)
